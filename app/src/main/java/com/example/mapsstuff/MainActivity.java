@@ -44,20 +44,24 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private FusedLocationProviderClient mFusedLocationClient;
-    private LocationCallback mLocationCallback;
 
-    private boolean bOn = true;
-    private double latitude = 0;
-    private double longitude = 0;
+    private FusedLocationProviderClient mFusedLocationClient; // location client used to determine current location
+    private LocationCallback mLocationCallback; // callback function when location is returned
+
+    private boolean bOn = true; // boolean for on and off value for app
+
+    private double mLatitude = 0; // current Latitude
+    private double mLongitude = 0; // current Longitude
 
     // latitude and longitude of newmarket GO train station
 
-    private double desiredLat = 44.060558;
-    private double desiredLong = -79.459834;
-    private CountDownTimer updateDestionationTimer;
-    // how close in kilometers before alarm goes off
-    private double alarmValue = 2.5;
+    private double mDesiredLat = 44.060558; // desired Latitude
+    private double mDesiredLong = -79.459834; //desired Longitude
+
+    private CountDownTimer mUpdateDestionationTimer; // timer to update address dropdown
+
+
+    private double mAlarmValue = 2.5; // how close in kilometers before alarm goes off
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,13 +87,10 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }
-            public void onNothingSelected(AdapterView<?> parent)
-            {
-
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        updateDestionationTimer = new CountDownTimer(1000, 20) {
+        mUpdateDestionationTimer = new CountDownTimer(1000, 20) {
 
             @Override
             public void onTick(long millisUntilFinished) {
@@ -101,8 +102,8 @@ public class MainActivity extends AppCompatActivity {
                     updateDestination();
                 }
                 catch(Exception e) {
-                    System.out.println(e.getStackTrace());
-                    updateDestionationTimer.start();
+                    e.printStackTrace();
+                    mUpdateDestionationTimer.start();
                 }
             }
         }.start();
@@ -115,18 +116,18 @@ public class MainActivity extends AppCompatActivity {
                 for (Location location : locationResult.getLocations()) {
 
                     //set current long and latitude
-                    latitude = location.getLatitude();
-                    longitude = location.getLongitude();
+                    mLatitude = location.getLatitude();
+                    mLongitude = location.getLongitude();
 
                     // get editable text elements
                     EditText alarmVal = (EditText) findViewById(R.id.alarmVal);
 
                     //try to load their values into their set variables
                     try {
-                        alarmValue = Double.parseDouble(alarmVal.getText().toString());
+                        mAlarmValue = Double.parseDouble(alarmVal.getText().toString());
                     }
                     catch (NumberFormatException e ) {
-                        System.out.println("Not a Double");
+                        e.printStackTrace();
                     }
 
                     //set the location in the UI
@@ -175,10 +176,10 @@ public class MainActivity extends AppCompatActivity {
         TextView remainingVal = (TextView) findViewById(R.id.remainingVal);
 
         /// get remaining distance in kilometers
-        double remainingDist = Math.sqrt(Math.pow((longitude - desiredLong),2) + Math.pow((latitude - desiredLat),2))*111;
+        double remainingDist = Math.sqrt(Math.pow((mLongitude - mDesiredLong),2) + Math.pow((mLatitude - mDesiredLat),2))*111;
 
         //if below set alarm distance, vibrate
-        if(remainingDist <= alarmValue) {
+        if(remainingDist <= mAlarmValue) {
 
             Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
@@ -209,37 +210,38 @@ public class MainActivity extends AppCompatActivity {
         Spinner locations = (Spinner) findViewById(R.id.locations);
 
         try {
-
+            // get 10 addresses that closest match current search
             addresses = geocoder.getFromLocationName(destination.getText().toString(),10);
             List<String> addressList = new ArrayList<String>();
-            addressList.add(destination.getText().toString()); //add current address string to simulate no selection
+            //add current address string to simulate no selection
+            addressList.add(destination.getText().toString());
 
-            // dont display if only one result (our current result)
-            String p = destination.getText().toString();
-            String pp = addresses.get(0).getAddressLine(0).toString();
-            boolean isIt = p == pp;
+            // dont display if only one result (our current result is only one)
             if(!(addresses.size() == 1 && destination.getText().toString().equals(addresses.get(0).getAddressLine(0).toString()))) {
+                // add all the results to the address list
                 for (android.location.Address x : addresses) {
                     addressList.add(x.getAddressLine(0));
                 }
             }
 
+            // change the data inside the dropdown
             ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, addressList);
             dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
             locations.setAdapter(dataAdapter);
 
+            // modify latitude and longtitude to the new ones
             if (addresses.size() > 0) {
-                desiredLat = addresses.get(0).getLatitude();
-                desiredLong = addresses.get(0).getLongitude();
+                mDesiredLat = addresses.get(0).getLatitude();
+                mDesiredLong = addresses.get(0).getLongitude();
             }
         }
         catch (IOException e) {
             e.printStackTrace();
         }
 
-    //restart timer
-        updateDestionationTimer.start();
+        //restart timer
+        mUpdateDestionationTimer.start();
 
 
     }
@@ -267,20 +269,24 @@ public class MainActivity extends AppCompatActivity {
     // set the text view that contains the approx address at our location
     public void SetApproxAddress() {
 
+
         Geocoder myLocation = new Geocoder(getApplicationContext(),
                 Locale.getDefault());
 
         try {
-            List<Address> myList = myLocation.getFromLocation(latitude,
-                    longitude, 1);
+            // get the closest known address to our location
+            List<Address> myList = myLocation.getFromLocation(mLatitude,
+                    mLongitude, 1);
+
             TextView addrView = (TextView) findViewById(R.id.approxAddr);
+
             if (myList != null && myList.size() > 0) {
+                // set that address
                 Address address = myList.get(0);
                 String result = address.getAddressLine(0);
 
                 addrView.setText(result);
-                // Toast.makeText(getApplicationContext(), ""+result,
-                // Toast.LENGTH_LONG).show();
+
             }
             else {
                 addrView.setText("Can't Find Address");
