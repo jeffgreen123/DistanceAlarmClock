@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     //set the location in the UI
-                    SetApproxAddress();
+                    setApproxAddress();
                     setRemainingDist();
             }
         };
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // set the text view that contains the approx address at our location
-    public void SetApproxAddress() {
+    public void setApproxAddress() {
 
 
         Geocoder myLocation = new Geocoder(getApplicationContext(),
