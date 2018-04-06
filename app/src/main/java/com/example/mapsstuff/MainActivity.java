@@ -50,6 +50,9 @@ public class MainActivity extends AppCompatActivity {
 
     private double mAlarmValue = 2.5; // how close in kilometers before alarm goes off
 
+    // adapter for drop down menu
+    ArrayAdapter<String> dropDownAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -86,7 +89,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 try {
-                    updateDestination();
+                    new Thread(new Runnable(){
+                        public void run() {
+                            updateDestination();
+                        }
+                    }).start();
+                    if(dropDownAdapter != null) {
+                        Spinner locations = (Spinner) findViewById(R.id.locations);
+                        locations.setAdapter(dropDownAdapter);
+                    }
                 }
                 catch(Exception e) {
                     e.printStackTrace();
@@ -187,12 +198,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateDestination() {
 
-
         Geocoder geocoder = new Geocoder(this);
 
         List<Address> addresses;
         EditText destination = (EditText) findViewById(R.id.destAddr);
-        Spinner locations = (Spinner) findViewById(R.id.locations);
+
 
         try {
             // get 10 addresses that closest match current search
@@ -211,10 +221,10 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // change the data inside the dropdown
-            ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, addressList);
-            dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            dropDownAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, addressList);
+            dropDownAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-            locations.setAdapter(dataAdapter);
+
 
             // modify latitude and longtitude to the new ones
             if (addresses.size() > 0) {
