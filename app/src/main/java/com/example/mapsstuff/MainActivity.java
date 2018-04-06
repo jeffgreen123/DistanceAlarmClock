@@ -100,8 +100,9 @@ public class MainActivity extends AppCompatActivity {
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                for (Location location : locationResult.getLocations()) {
 
+                    Location location = locationResult.getLocations().get(0);
+                    locationResult.getLocations().size();
                     //set current long and latitude
                     mLatitude = location.getLatitude();
                     mLongitude = location.getLongitude();
@@ -119,18 +120,15 @@ public class MainActivity extends AppCompatActivity {
 
                     //set the location in the UI
                     SetApproxAddress();
-                    setLocation();
-                }
+                    setRemainingDist();
             }
-
-
         };
 
     }
 
 
 
-    public void checkPermission(){
+    public void checkPermission() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 ){//Can add more as per requirement
@@ -157,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    protected void setLocation() {
+    protected void setRemainingDist() {
         //get all the UI elements that need to be changed
 
         TextView remainingVal = (TextView) findViewById(R.id.remainingVal);
@@ -200,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
             // get 10 addresses that closest match current search
             addresses = geocoder.getFromLocationName(destination.getText().toString(),10);
             List<String> addressList = new ArrayList<String>();
+
             //add current address string to simulate no selection
             addressList.add(destination.getText().toString());
 
@@ -262,12 +261,14 @@ public class MainActivity extends AppCompatActivity {
         Geocoder myLocation = new Geocoder(getApplicationContext(),
                 Locale.getDefault());
 
+        TextView addrView = (TextView) findViewById(R.id.approxAddr);
+
         try {
             // get the closest known address to our location
             List<Address> myList = myLocation.getFromLocation(mLatitude,
                     mLongitude, 1);
 
-            TextView addrView = (TextView) findViewById(R.id.approxAddr);
+
 
             if (myList != null && myList.size() > 0) {
                 // set that address
@@ -283,6 +284,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         } catch (IOException e) {
+            addrView.setText("Issues Finding Address");
             e.printStackTrace();
         }
     }
